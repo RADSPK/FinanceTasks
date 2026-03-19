@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Command Centre</title>
+<style>
+:root {
+  --accent:#7D1A2E;--accent-dim:rgba(125,26,46,0.09);
+  --bg:#f0ede8;--surface:#fff;--surface2:#f7f5f2;--surface3:#eeebe6;
+  --border:#dedad3;--border2:#c9c5bc;
+  --text:#1c1a17;--text2:#5a5651;--text3:#9a968e;
+  --green:#1a7a50;--green-bg:rgba(26,122,80,0.1);
+  --amber:#b87200;--amber-bg:rgba(184,114,0,0.1);
+  --red:#c02828;--red-bg:rgba(192,40,40,0.1);
+  --blue:#1a52a0;--blue-bg:rgba(26,82,160,0.1);
+  --shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Calibri,'Gill Sans MT',Candara,'Trebuchet MS',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* ── GOOGLE CONNECT SCREEN ─────────────────────── */
+#gScreen{position:fixed;inset:0;z-index:3000;background:linear-gradient(140deg,#1a0e14,#2c1520 50%,#14182a);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.gs-logo{width:62px;height:62px;background:var(--accent);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 10px;box-shadow:0 8px 30px rgba(125,26,46,0.55);}
+.gs-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:34px 36px;width:380px;max-width:94vw;backdrop-filter:blur(14px);text-align:center;}
+.gs-title{font-size:24px;font-weight:700;color:#fff;margin-bottom:6px;}
+.gs-sub{font-size:12.5px;color:rgba(255,255,255,0.42);margin-bottom:26px;line-height:1.6;}
+.gconnect-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;background:#fff;color:#3c3c3c;border:none;border-radius:9px;font-family:Calibri,sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:filter .2s;margin-bottom:10px;}
+.gconnect-btn:hover{filter:brightness(0.95);}
+.gconnect-btn svg{flex-shrink:0;}
+.gs-note{font-size:11px;color:rgba(255,255,255,0.28);line-height:1.7;margin-top:14px;}
+.gs-err{color:#ff8888;font-size:12px;margin-top:10px;display:none;}
+
+/* ── LOADING OVERLAY ───────────────────────────── */
+#loadingScreen{position:fixed;inset:0;z-index:2500;background:linear-gradient(140deg,#1a0e14,#2c1520 50%,#14182a);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,0.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-msg{color:rgba(255,255,255,0.6);font-size:14px;}
+.load-sub{color:rgba(255,255,255,0.3);font-size:12px;}
+
+/* ── LOGIN SCREEN ──────────────────────────────── */
+#loginScreen{position:fixed;inset:0;z-index:2000;background:linear-gradient(140deg,#1a0e14,#2c1520 50%,#14182a);display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;}
+.login-brand{text-align:center;color:#fff;}
+.login-logo{width:56px;height:56px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 12px;box-shadow:0 8px 28px rgba(125,26,46,0.55);}
+.login-brand h1{font-size:25px;font-weight:700;}
+.login-brand p{font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;}
+.login-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:16px;padding:28px 30px;width:355px;max-width:94vw;backdrop-filter:blur(12px);}
+.login-card h2{font-size:15px;color:rgba(255,255,255,0.85);margin-bottom:18px;font-weight:700;}
+.lf{margin-bottom:14px;}
+.lf label{display:block;font-size:11px;color:rgba(255,255,255,0.42);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px;font-weight:700;}
+.lf select,.lf input{width:100%;padding:9px 12px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);border-radius:8px;color:#fff;font-family:Calibri,sans-serif;font-size:14px;outline:none;transition:border .2s;}
+.lf select option{background:#2c1520;color:#fff;}
+.lf input::placeholder{color:rgba(255,255,255,0.3);}
+.lf input:focus,.lf select:focus{border-color:rgba(125,26,46,0.8);}
+.login-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:Calibri,sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:filter .2s;margin-top:5px;}
+.login-btn:hover{filter:brightness(1.12);}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.login-error{color:#ff8888;font-size:12px;margin-top:8px;display:none;text-align:center;}
+.login-hint{font-size:11px;color:rgba(255,255,255,0.25);text-align:center;margin-top:12px;line-height:1.7;}
+.login-chpwd{text-align:center;margin-top:10px;}
+.login-chpwd a{font-size:12px;color:rgba(125,180,255,0.65);cursor:pointer;text-decoration:underline;}
+.login-gsync{font-size:11px;color:rgba(255,255,255,0.22);text-align:center;margin-top:8px;}
+
+/* ── APP SHELL ─────────────────────────────────── */
+#appShell{display:none;}
+
+/* ── TOP BAR ───────────────────────────────────── */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.app-brand{display:flex;align-items:center;gap:8px;}
+.brand-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;}
+.brand-name{font-size:15px;font-weight:700;}
+.brand-sub{font-size:10px;color:var(--text3);}
+.top-right{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.date-chip{font-size:12px;color:var(--text3);background:var(--surface2);padding:3px 8px;border-radius:5px;border:1px solid var(--border);}
+.sync-chip{font-size:11px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);color:var(--text3);transition:all .2s;}
+.sync-chip:hover{border-color:var(--accent);color:var(--accent);}
+.sync-chip.syncing{color:var(--amber);border-color:var(--amber);}
+.sync-chip.ok{color:var(--green);border-color:rgba(26,122,80,0.3);}
+.sync-chip.err{color:var(--red);border-color:rgba(192,40,40,0.3);}
+.user-chip{display:flex;align-items:center;gap:6px;padding:3px 9px 3px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:13px;color:var(--text2);}
+.notif-btn{position:relative;background:none;border:none;font-size:18px;cursor:pointer;padding:3px 5px;color:var(--text2);border-radius:5px;transition:color .2s;}
+.notif-btn:hover{color:var(--accent);background:var(--surface2);}
+.notif-badge{position:absolute;top:0;right:0;min-width:15px;height:15px;background:var(--red);border-radius:8px;font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;padding:0 3px;}
+.admin-btn{padding:4px 10px;border-radius:5px;background:var(--accent-dim);border:1px solid rgba(125,26,46,0.2);color:var(--accent);cursor:pointer;font-size:12px;font-family:Calibri,sans-serif;font-weight:700;transition:all .2s;}
+.admin-btn:hover{background:var(--accent);color:#fff;}
+.logout-btn{padding:4px 10px;border-radius:5px;background:none;border:1px solid var(--border2);color:var(--text3);cursor:pointer;font-size:12px;font-family:Calibri,sans-serif;transition:all .2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.view-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.view-btn{padding:4px 12px;border:none;background:none;color:var(--text3);cursor:pointer;font-family:Calibri,sans-serif;font-size:13px;font-weight:700;transition:all .2s;}
+.view-btn.active{background:var(--accent);color:#fff;}
+
+/* ── ORG TABS ──────────────────────────────────── */
+.org-tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);padding:0 20px;overflow-x:auto;}
+.org-tab{display:flex;align-items:center;gap:7px;padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text3);font-size:13px;font-weight:700;transition:all .2s;white-space:nowrap;user-select:none;}
+.org-tab:hover{color:var(--text2);}
+.org-tab.active{color:var(--text);}
+.org-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.org-badge{font-size:10px;padding:1px 5px;border-radius:3px;background:var(--surface3);color:var(--text3);}
+
+/* ── LAYOUT ────────────────────────────────────── */
+.layout{display:flex;height:calc(100vh - 108px);}
+
+/* ── SIDEBAR ───────────────────────────────────── */
+.sidebar{width:190px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:12px 0;overflow-y:auto;}
+.sb-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:0 12px 6px;font-weight:700;}
+.cat-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 12px;background:none;border:none;cursor:pointer;color:var(--text2);text-align:left;font-family:Calibri,sans-serif;font-size:13px;transition:all .15s;border-left:3px solid transparent;}
+.cat-btn:hover{color:var(--text);background:var(--surface2);}
+.cat-btn.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-dim);font-weight:700;}
+.ci{font-size:13px;width:16px;text-align:center;}
+.cc{margin-left:auto;font-size:11px;color:var(--text3);background:var(--surface3);padding:1px 5px;border-radius:3px;}
+.sb-div{height:1px;background:var(--border);margin:9px 12px;}
+.tm{display:flex;align-items:center;gap:7px;padding:6px 12px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;}
+.tm:hover{background:var(--surface2);}
+.tm.af{border-left-color:var(--accent);background:var(--accent-dim);}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;color:#fff;}
+.mn{font-size:12px;color:var(--text2);font-weight:700;line-height:1.2;}
+.mr{font-size:10px;color:var(--text3);}
+
+/* ── MAIN ──────────────────────────────────────── */
+.main{flex:1;overflow-y:auto;padding:16px 20px;}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:3px solid var(--accent);box-shadow:var(--shadow);}
+.sv{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.sl{font-size:12px;color:var(--text3);margin-top:3px;}
+.ss{font-size:11px;margin-top:2px;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.st{font-size:17px;font-weight:700;}
+.add-btn{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:Calibri,sans-serif;font-size:13px;font-weight:700;transition:filter .2s;}
+.add-btn:hover{filter:brightness(1.1);}
+.fr{display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap;}
+.sb{flex:1;min-width:160px;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:6px;font-family:Calibri,sans-serif;font-size:13px;outline:none;}
+.sb:focus{border-color:var(--accent);}
+.fs{background:var(--surface);border:1px solid var(--border);color:var(--text2);padding:5px 8px;border-radius:6px;font-family:Calibri,sans-serif;font-size:13px;cursor:pointer;outline:none;}
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);}
+.tt{width:100%;border-collapse:collapse;}
+.tt th{text-align:left;padding:8px 10px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;background:var(--surface2);border-bottom:1px solid var(--border);}
+.tt td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tt tbody tr:last-child td{border-bottom:none;}
+.tt tbody tr:hover{background:var(--surface2);}
+.tc{font-weight:700;}
+.tc small{display:block;font-size:11px;color:var(--text3);margin-top:2px;font-weight:400;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;}
+.bdot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.s-ns{background:var(--surface3);color:var(--text3);}
+.s-ip{background:var(--amber-bg);color:var(--amber);}
+.s-dn{background:var(--green-bg);color:var(--green);}
+.s-od{background:var(--red-bg);color:var(--red);}
+.s-rv{background:var(--blue-bg);color:var(--blue);}
+.p-hi{background:var(--red-bg);color:var(--red);}
+.p-me{background:var(--amber-bg);color:var(--amber);}
+.p-lo{background:var(--green-bg);color:var(--green);}
+.ac{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:12px;color:var(--text2);}
+.avsm{width:17px;height:17px;border-radius:50%;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dd{font-size:12px;color:var(--text3);}
+.dd-od{color:var(--red);font-weight:700;}
+.ab{background:none;border:none;cursor:pointer;color:var(--text3);padding:3px 5px;border-radius:4px;transition:all .15s;font-size:13px;}
+.ab:hover{color:var(--text2);background:var(--surface3);}
+.ab.del:hover{color:var(--red);}
+.cgr td{background:var(--surface2);padding:5px 10px;border-bottom:1px solid var(--border);}
+.cgl{font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:5px;}
+.op{padding:2px 7px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.oi{display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+
+/* ── MATRIX ────────────────────────────────────── */
+#matrixView{display:none;}
+.mt2{width:100%;border-collapse:collapse;}
+.mt2 th{padding:8px 12px;background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-weight:700;}
+.mt2 td{padding:8px 12px;border:1px solid var(--border);vertical-align:middle;}
+.mt2 tr:hover td{background:var(--surface2);}
+.mcat{font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-dim)!important;}
+.raci{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;border:2px solid transparent;}
+.raci:hover{transform:scale(1.18);}
+.rR{background:rgba(125,26,46,0.13);color:#7D1A2E;border-color:rgba(125,26,46,0.3);}
+.rA{background:var(--amber-bg);color:var(--amber);border-color:rgba(184,114,0,0.3);}
+.rC{background:var(--blue-bg);color:var(--blue);border-color:rgba(26,82,160,0.3);}
+.rI{background:var(--green-bg);color:var(--green);border-color:rgba(26,122,80,0.3);}
+.rE{background:var(--surface3);color:var(--text3);border-color:var(--border);}
+.rtd{text-align:center;}
+.mrl{font-size:13px;font-weight:700;}
+.legend{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2);}
+
+/* ── MODALS ────────────────────────────────────── */
+.mo{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.28);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;}
+.mo.open{display:flex;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.mc-sm{width:400px;}.mc-md{width:520px;}.mc-lg{width:680px;}
+.mtt{font-size:18px;font-weight:700;margin-bottom:18px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fgg{display:flex;flex-direction:column;gap:5px;}
+.fgg.full{grid-column:1/-1;}
+.fgg label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;}
+.fgg input,.fgg select,.fgg textarea{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:7px;font-family:Calibri,sans-serif;font-size:14px;outline:none;transition:border .2s;width:100%;}
+.fgg input:focus,.fgg select:focus,.fgg textarea:focus{border-color:var(--accent);}
+.fgg textarea{resize:vertical;min-height:60px;}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.bc{padding:7px 14px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;font-family:Calibri,sans-serif;font-size:14px;}
+.bs{padding:7px 16px;border-radius:7px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:Calibri,sans-serif;font-size:14px;font-weight:700;}
+.bs:hover{filter:brightness(1.1);}
+.bs:disabled{opacity:0.6;cursor:not-allowed;}
+
+/* ── ADMIN PANEL ───────────────────────────────── */
+.atabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.atab{padding:7px 14px;border:none;background:none;cursor:pointer;font-family:Calibri,sans-serif;font-size:13px;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:700;}
+.atab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.ulist{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.ur{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);}
+.uri{flex:1;}
+.urn{font-weight:700;font-size:13px;}
+.urm{font-size:11px;color:var(--text3);}
+.ura{display:flex;gap:5px;}
+.ib{background:none;border:1px solid var(--border);padding:4px 7px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text3);transition:all .2s;font-family:Calibri,sans-serif;}
+.ib:hover{border-color:var(--accent);color:var(--accent);}
+.ib.red:hover{border-color:var(--red);color:var(--red);}
+.admin-badge{font-size:10px;padding:2px 5px;border-radius:3px;background:var(--accent-dim);color:var(--accent);font-weight:700;border:1px solid rgba(125,26,46,0.2);}
+.sh2{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+
+/* ── NOTIFICATIONS ─────────────────────────────── */
+.ni{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:8px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);}
+.ni.unread{background:var(--accent-dim);}
+.nico{font-size:19px;}
+.nitl{font-weight:700;font-size:13px;margin-bottom:2px;}
+.nidc{font-size:12px;color:var(--text3);}
+.nitm{font-size:11px;color:var(--text3);margin-top:2px;}
+.ne{text-align:center;padding:28px;color:var(--text3);}
+.badge-new{background:var(--red-bg);color:var(--red);font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:5px;}
+
+/* ── TOAST ─────────────────────────────────────── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast-msg{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;box-shadow:var(--shadow-lg);animation:slideUp .3s ease;max-width:280px;}
+.toast-msg.ok{background:#1a7a50;color:#fff;}
+.toast-msg.err{background:#c02828;color:#fff;}
+.toast-msg.info{background:#1a52a0;color:#fff;}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.es{text-align:center;padding:40px;color:var(--text3);}
+.es .ei{font-size:32px;margin-bottom:8px;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surface2);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ GOOGLE CONNECT ═══════════════════════════ -->
+<div id="gScreen">
+  <div class="gs-card">
+    <div class="gs-logo">Σ</div>
+    <div class="gs-title">Finance Command Centre</div>
+    <div class="gs-sub">Connect your Google account to access the<br>shared team database on Google Sheets.</div>
+    <button class="gconnect-btn" onclick="connectGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="gs-err" id="gsErr"></div>
+    <div class="gs-note">
+      ℹ️ Your data is stored in your private Google Sheet.<br>
+      Only authorized team members can access it.<br>
+      First time on this device requires Google sign-in.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOADING ═══════════════════════════════════ -->
+<div id="loadingScreen">
+  <div class="spin"></div>
+  <div class="load-msg" id="loadMsg">Loading…</div>
+  <div class="load-sub" id="loadSub"></div>
+</div>
+
+<!-- ═══ LOGIN ════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-brand">
+    <div class="login-logo">Σ</div>
+    <h1>Finance Command Centre</h1>
+    <p>Task Tracker &amp; Responsibility Matrix</p>
+  </div>
+  <div class="login-card">
+    <h2>Sign in to your account</h2>
+    <div class="lf"><label>Select User</label><select id="loginUser"></select></div>
+    <div class="lf"><label>Password</label><input type="password" id="loginPwd" placeholder="Enter password…" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
+    <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+    <div class="login-hint">Contact Muhammad Umair Savul (Admin) to reset your password.</div>
+    <div class="login-chpwd"><a onclick="openChangePwd()">Change my password</a></div>
+    <div class="login-gsync">🔗 Connected to Google Sheets</div>
+  </div>
+</div>
+
+<!-- ═══ APP SHELL ═════════════════════════════════ -->
+<div id="appShell">
+
+<div class="top-bar">
+  <div class="app-brand">
+    <div class="brand-icon">Σ</div>
+    <div><div class="brand-name">Finance Command Centre</div><div class="brand-sub">Task Tracker &amp; Responsibility Matrix</div></div>
+  </div>
+  <div class="top-right">
+    <div class="date-chip" id="datechip"></div>
+    <div class="sync-chip ok" id="syncChip" onclick="syncNow()" title="Click to sync">✓ Synced</div>
+    <button class="notif-btn" onclick="openNotifPanel()" title="Notifications">🔔<span class="notif-badge" id="notifBadge" style="display:none">0</span></button>
+    <span id="adminBtnWrap" style="display:none"><button class="admin-btn" onclick="openAdmin()">⚙ Admin</button></span>
+    <div class="user-chip" id="currentUserChip"></div>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="switchView('tasks')">📋 Tasks</button>
+      <button class="view-btn" onclick="switchView('matrix')">⊞ RACI</button>
+    </div>
+  </div>
+</div>
+
+<div class="org-tabs">
+  <div class="org-tab active" onclick="selectOrg('RADS')"><span class="org-dot" style="background:#7D1A2E"></span>RADS Pakistan<span class="org-badge">PKR</span></div>
+  <div class="org-tab" onclick="selectOrg('AHKF')"><span class="org-dot" style="background:#1a3a6e"></span>AHKF<span class="org-badge">NGO</span></div>
+  <div class="org-tab" onclick="selectOrg('AeH')"><span class="org-dot" style="background:#c45c00"></span>Andaaz-e-Hunar<span class="org-badge">PVT</span></div>
+  <div class="org-tab" onclick="selectOrg('RADS_SG')"><span class="org-dot" style="background:#c80c0c"></span>RADS Singapore<span class="org-badge">SGD</span></div>
+  <div class="org-tab" onclick="selectOrg('RADS_US')"><span class="org-dot" style="background:#003ab0"></span>RADS US LLC<span class="org-badge">USD</span></div>
+  <div class="org-tab" onclick="selectOrg('ALL')"><span class="org-dot" style="background:#9b72cf"></span>All Orgs</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-lbl">Categories</div>
+    <button class="cat-btn active" onclick="filterCat('all',this)"><span class="ci">◈</span>All Tasks<span class="cc" id="cnt-all">0</span></button>
+    <button class="cat-btn" onclick="filterCat('Audit',this)"><span class="ci">🔍</span>Audit<span class="cc" id="cnt-Audit">0</span></button>
+    <button class="cat-btn" onclick="filterCat('Tax & Compliance',this)"><span class="ci">📜</span>Tax &amp; Compliance<span class="cc" id="cnt-Tax">0</span></button>
+    <button class="cat-btn" onclick="filterCat('Bank & Treasury',this)"><span class="ci">🏦</span>Bank &amp; Treasury<span class="cc" id="cnt-Bank">0</span></button>
+    <button class="cat-btn" onclick="filterCat('Financial Reporting',this)"><span class="ci">📊</span>Financial Reporting<span class="cc" id="cnt-FR">0</span></button>
+    <button class="cat-btn" onclick="filterCat('Donor Reporting',this)"><span class="ci">🌐</span>Donor Reporting<span class="cc" id="cnt-DR">0</span></button>
+    <button class="cat-btn" onclick="filterCat('Others',this)"><span class="ci">📁</span>Others<span class="cc" id="cnt-Others">0</span></button>
+    <div class="sb-div"></div>
+    <div class="sb-lbl">Team Filter</div>
+    <div class="tm" onclick="filterMember('all',this)"><div class="av" style="background:#888">★</div><div><div class="mn">Everyone</div></div></div>
+    <div id="teamSidebar"></div>
+  </aside>
+
+  <main class="main">
+    <div id="tasksView">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="oi" id="orgInd"></div>
+      <div class="sh"><div class="st" id="secTitle">All Tasks</div><button class="add-btn" onclick="openTaskModal()">+ Add Task</button></div>
+      <div class="fr">
+        <input class="sb" type="text" placeholder="Search tasks…" oninput="renderTable()" id="searchBox">
+        <select class="fs" onchange="renderTable()" id="statusFilter"><option value="">All Statuses</option><option>Not Started</option><option>In Progress</option><option>Under Review</option><option>Completed</option><option>Overdue</option></select>
+        <select class="fs" onchange="renderTable()" id="priorityFilter"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <div class="tw"><table class="tt">
+        <thead><tr><th>Task / Description</th><th>Category</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due Date</th><th>Org</th><th></th></tr></thead>
+        <tbody id="taskBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="matrixView">
+      <div class="sh">
+        <div class="st">RACI Responsibility Matrix</div>
+        <select class="fs" id="matrixOrgSel" onchange="renderMatrix()"><option value="RADS">RADS Pakistan</option><option value="AHKF">AHKF</option><option value="AeH">Andaaz-e-Hunar</option><option value="RADS_SG">RADS Singapore</option><option value="RADS_US">RADS US LLC</option></select>
+      </div>
+      <div class="legend">
+        <div class="li"><span class="raci rR">R</span> Responsible</div>
+        <div class="li"><span class="raci rA">A</span> Accountable</div>
+        <div class="li"><span class="raci rC">C</span> Consulted</div>
+        <div class="li"><span class="raci rI">I</span> Informed</div>
+        <div class="li" style="color:var(--text3);font-size:12px;">⬆ Click any cell to change &amp; auto-save</div>
+      </div>
+      <div class="tw" style="overflow:auto;"><table class="mt2" id="matrixTable"></table></div>
+    </div>
+  </main>
+</div>
+</div><!-- /appShell -->
+
+<!-- ═══ TASK MODAL ═══════════════════════════════ -->
+<div class="mo" id="taskModal">
+  <div class="mc mc-md">
+    <div class="mtt" id="taskModalTitle">New Task</div>
+    <div class="fg">
+      <div class="fgg full"><label>Task Title *</label><input type="text" id="fTitle" placeholder="Enter task title…"></div>
+      <div class="fgg full"><label>Description</label><textarea id="fDesc" placeholder="Notes or details…"></textarea></div>
+      <div class="fgg"><label>Organization *</label><select id="fOrg"><option value="RADS">RADS Pakistan</option><option value="AHKF">AHKF</option><option value="AeH">Andaaz-e-Hunar</option><option value="RADS_SG">RADS Singapore</option><option value="RADS_US">RADS US LLC</option></select></div>
+      <div class="fgg"><label>Category *</label><select id="fCat"><option>Audit</option><option>Tax &amp; Compliance</option><option>Bank &amp; Treasury</option><option>Financial Reporting</option><option>Donor Reporting</option><option>Others</option></select></div>
+      <div class="fgg"><label>Assignee *</label><select id="fAssignee"></select></div>
+      <div class="fgg"><label>Priority</label><select id="fPriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+      <div class="fgg"><label>Status</label><select id="fStatus"><option>Not Started</option><option>In Progress</option><option>Under Review</option><option>Completed</option><option>Overdue</option></select></div>
+      <div class="fgg"><label>Due Date</label><input type="date" id="fDue"></div>
+    </div>
+    <div class="ma"><button class="bc" onclick="closeModal('taskModal')">Cancel</button><button class="bs" id="saveTaskBtn" onclick="saveTask()">Save Task</button></div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN MODAL ══════════════════════════════ -->
+<div class="mo" id="adminModal">
+  <div class="mc mc-lg">
+    <div class="mtt">⚙ Admin Panel</div>
+    <div class="atabs">
+      <button class="atab active" onclick="adminTab('users',this)">Team Members</button>
+      <button class="atab" onclick="adminTab('addUser',this)">Add Member</button>
+      <button class="atab" onclick="adminTab('reset',this)">Reset Password</button>
+    </div>
+    <div id="adminTabUsers"><div class="sh2">Current Team Members</div><div class="ulist" id="userListEl"></div></div>
+    <div id="adminTabAddUser" style="display:none">
+      <div class="sh2">Add New Team Member</div>
+      <div class="fg">
+        <div class="fgg"><label>Full Name *</label><input type="text" id="nuName" placeholder="Full name"></div>
+        <div class="fgg"><label>Initials (2–3 chars) *</label><input type="text" id="nuInit" maxlength="3" placeholder="e.g. AB"></div>
+        <div class="fgg"><label>Role / Designation</label><input type="text" id="nuRole" placeholder="e.g. Senior Finance Officer"></div>
+        <div class="fgg"><label>Default Password *</label><input type="password" id="nuPwd" placeholder="Set initial password"></div>
+        <div class="fgg"><label>Avatar Color</label><input type="color" id="nuColor" value="#7D1A2E" style="height:36px;padding:2px;cursor:pointer;"></div>
+        <div class="fgg"><label>Admin Access</label><select id="nuAdmin"><option value="false">No — Regular User</option><option value="true">Yes — Admin</option></select></div>
+      </div>
+      <div class="ma"><button class="bc" onclick="closeModal('adminModal')">Cancel</button><button class="bs" id="addUserBtn" onclick="addNewUser()">Add Member</button></div>
+    </div>
+    <div id="adminTabReset" style="display:none">
+      <div class="sh2">Reset Password</div>
+      <div class="fg">
+        <div class="fgg"><label>Select User</label><select id="resetUser"></select></div>
+        <div class="fgg"><label>New Password</label><input type="password" id="resetPwd" placeholder="Min 6 characters"></div>
+      </div>
+      <div class="ma"><button class="bc" onclick="closeModal('adminModal')">Cancel</button><button class="bs" id="resetPwdBtn" onclick="doResetPassword()">Reset Password</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NOTIF MODAL ══════════════════════════════ -->
+<div class="mo" id="notifModal">
+  <div class="mc mc-md">
+    <div class="mtt">🔔 Notifications</div>
+    <div id="notifList"></div>
+    <div class="ma"><button class="bc" onclick="markAllRead()">Mark All Read</button><button class="bs" onclick="closeModal('notifModal')">Close</button></div>
+  </div>
+</div>
+
+<!-- ═══ CHANGE PWD MODAL ════════════════════════ -->
+<div class="mo" id="changePwdModal">
+  <div class="mc mc-sm">
+    <div class="mtt">🔒 Change Password</div>
+    <div class="fgg" style="margin-bottom:12px"><label>Select Account</label><select id="cpUser"></select></div>
+    <div class="fgg" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="cpOld" placeholder="Current password"></div>
+    <div class="fgg"><label>New Password</label><input type="password" id="cpNew" placeholder="New password (min 6 chars)"></div>
+    <div style="color:var(--red);font-size:12px;margin-top:8px;display:none" id="cpError"></div>
+    <div class="ma"><button class="bc" onclick="closeModal('changePwdModal')">Cancel</button><button class="bs" onclick="doChangePwd()">Update Password</button></div>
+  </div>
+</div>
+
+<!-- ═══ EDIT USER MODAL ══════════════════════════ -->
+<div class="mo" id="editUserModal">
+  <div class="mc mc-sm">
+    <div class="mtt">Edit Team Member</div>
+    <input type="hidden" id="euId">
+    <div class="fg">
+      <div class="fgg full"><label>Full Name</label><input type="text" id="euName"></div>
+      <div class="fgg"><label>Role</label><input type="text" id="euRole"></div>
+      <div class="fgg"><label>Initials</label><input type="text" id="euInit" maxlength="3"></div>
+      <div class="fgg"><label>Color</label><input type="color" id="euColor" style="height:36px;padding:2px;cursor:pointer;"></div>
+      <div class="fgg"><label>Admin Access</label><select id="euAdmin"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="ma"><button class="bc" onclick="closeModal('editUserModal')">Cancel</button><button class="bs" onclick="saveEditUser()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ════════════════════════════════════ -->
+<div id="toast"></div>
+
+<!-- ═══ GIS LIBRARY ══════════════════════════════ -->
+<script src="https://accounts.google.com/gsi/client" async onload="onGISLoad()"></script>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const SHEET_ID  = '1h_eOCQcGf6vjrs4drvSFrmNN0EY6mfa4qBV4f7osYsY';
+const CLIENT_ID = '271623211910-6cbcjdcrb6p69v1nupuuq88at3mqs800.apps.googleusercontent.com';
+const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets';
+const API       = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
+
+// ════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════
+const ORGS={RADS:{name:'RADS Pakistan',short:'RADS',color:'#7D1A2E',bg:'rgba(125,26,46,0.1)'},AHKF:{name:'AHKF',short:'AHKF',color:'#1a3a6e',bg:'rgba(26,58,110,0.1)'},AeH:{name:'Andaaz-e-Hunar',short:'AeH',color:'#c45c00',bg:'rgba(196,92,0,0.1)'},RADS_SG:{name:'RADS Singapore',short:'RADS-SG',color:'#c80c0c',bg:'rgba(200,12,12,0.1)'},RADS_US:{name:'RADS US LLC',short:'RADS-US',color:'#003ab0',bg:'rgba(0,58,176,0.1)'}};
+const CATS=['Audit','Tax & Compliance','Bank & Treasury','Financial Reporting','Donor Reporting','Others'];
+const CICO={Audit:'🔍','Tax & Compliance':'📜','Bank & Treasury':'🏦','Financial Reporting':'📊','Donor Reporting':'🌐',Others:'📁'};
+const SCLS={'Not Started':'s-ns','In Progress':'s-ip','Completed':'s-dn','Overdue':'s-od','Under Review':'s-rv'};
+const RCYC=['','R','A','C','I'];
+
+// ════════════════════════════════════════════════
+// RUNTIME STATE
+// ════════════════════════════════════════════════
+let accessToken=null, tokenClient=null;
+let appData={tasks:[],users:[],raci:{},notifications:{}};
+let currentUser=null;
+let activeOrg='RADS',activeCat='all',activeMember='all',activeView='tasks';
+let editingTaskId=null;
+let tokenExpiry=0;
+
+// Default data (used only on first-ever run to seed the sheet)
+const DEFAULT_USERS=[
+  {id:'AK',name:'Dr. Ayesha Khan',role:'CEO',initials:'AK',color:'#6a1a5e',password:'ayesha2025',isAdmin:false},
+  {id:'US',name:'Muhammad Umair Savul',role:'Finance Manager',initials:'US',color:'#7D1A2E',password:'umair2025',isAdmin:true},
+  {id:'RH',name:'Riaz Hussain',role:'Asst. Manager Finance',initials:'RH',color:'#1a3a6e',password:'riaz2025',isAdmin:false},
+  {id:'MH',name:'Muhammad Hasan',role:'Finance Officer',initials:'MH',color:'#c45c00',password:'hasan2025',isAdmin:false},
+];
+const DEFAULT_RACI={RADS:{Audit:{'Annual Statutory Audit':{AK:'A',US:'R',RH:'C',MH:'I'},'Project Donor Audit':{AK:'A',US:'R',RH:'C',MH:'C'},'Internal Controls Review':{AK:'I',US:'A',RH:'R',MH:'C'}},'Tax & Compliance':{'Monthly WHT Filing':{AK:'I',US:'A',RH:'R',MH:'C'},'Annual Income Tax Return':{AK:'A',US:'R',RH:'C',MH:''},'SECP Annual Return':{AK:'I',US:'A',RH:'R',MH:''},'NPO Registration':{AK:'A',US:'R',RH:'C',MH:''}},'Bank & Treasury':{'Monthly Bank Reconciliation':{AK:'I',US:'A',RH:'C',MH:'R'},'Investment Management':{AK:'A',US:'R',RH:'I',MH:''},'Signatory Management':{AK:'A',US:'R',RH:'C',MH:''}},'Financial Reporting':{'Monthly MIS Report':{AK:'A',US:'R',RH:'C',MH:'C'},'Quarterly Financials':{AK:'A',US:'R',RH:'C',MH:'I'},'Year-End Statements':{AK:'A',US:'R',RH:'C',MH:'I'}},'Donor Reporting':{'Gates Foundation BVA':{AK:'A',US:'R',RH:'C',MH:'C'},'UN Women Reports':{AK:'I',US:'A',RH:'R',MH:'C'},'USAID Expenditure Reports':{AK:'A',US:'R',RH:'C',MH:''}},'Others':{'Payroll Processing':{AK:'I',US:'A',RH:'C',MH:'R'},'Finance Policy':{AK:'A',US:'R',RH:'C',MH:'I'}}},AHKF:{Audit:{'Annual Statutory Audit':{AK:'A',US:'R',RH:'C',MH:'I'},'UN Women D4WEE Audit':{AK:'A',US:'R',RH:'C',MH:''}},'Tax & Compliance':{'Annual Tax Return':{AK:'A',US:'R',RH:'C',MH:''},'Monthly WHT Filing':{AK:'I',US:'A',RH:'R',MH:'C'}},'Bank & Treasury':{'Bank Reconciliation':{AK:'I',US:'A',RH:'C',MH:'R'}},'Financial Reporting':{'Monthly Accounts Closing':{AK:'I',US:'A',RH:'R',MH:'C'}},'Donor Reporting':{'UN Women Monthly Report':{AK:'A',US:'R',RH:'C',MH:''},'BAT EAP Reporting':{AK:'I',US:'A',RH:'R',MH:'C'}},'Others':{'Contract Reviews':{AK:'A',US:'R',RH:'C',MH:''}}},AeH:{Audit:{'Annual Audit':{AK:'A',US:'R',RH:'C',MH:'I'}},'Tax & Compliance':{'SECP Annual Return':{AK:'A',US:'C',RH:'R',MH:''},'Corporate Tax Return':{AK:'A',US:'R',RH:'C',MH:''}},'Bank & Treasury':{'Bank Reconciliation':{AK:'I',US:'A',RH:'C',MH:'R'}},'Financial Reporting':{'Quarterly P&L':{AK:'A',US:'R',RH:'C',MH:'I'}},'Donor Reporting':{},'Others':{'Company Secretarial':{AK:'A',US:'C',RH:'R',MH:''}}},RADS_SG:{Audit:{'ACRA Audit':{AK:'A',US:'R',RH:'C',MH:''}},'Tax & Compliance':{'IRAS Corporate Tax':{AK:'A',US:'R',RH:'C',MH:''},'GST Filing':{AK:'I',US:'A',RH:'R',MH:''}},'Bank & Treasury':{'SGD Reconciliation':{AK:'I',US:'A',RH:'C',MH:'R'}},'Financial Reporting':{'Monthly SGD Reporting':{AK:'A',US:'R',RH:'C',MH:'I'}},'Donor Reporting':{},'Others':{'ACRA Annual Return':{AK:'A',US:'R',RH:'C',MH:''}}},RADS_US:{Audit:{'LLC Annual Audit':{AK:'A',US:'R',RH:'C',MH:''}},'Tax & Compliance':{'IRS Federal Return':{AK:'A',US:'R',RH:'C',MH:''},'State Tax Compliance':{AK:'I',US:'A',RH:'R',MH:''}},'Bank & Treasury':{'USD Reconciliation':{AK:'I',US:'A',RH:'C',MH:'R'}},'Financial Reporting':{'USD Monthly Reports':{AK:'A',US:'R',RH:'C',MH:'I'}},'Donor Reporting':{'USAID Reporting':{AK:'A',US:'R',RH:'C',MH:''}},'Others':{'LLC Governance':{AK:'A',US:'R',RH:'I',MH:''}}}};
+
+// ════════════════════════════════════════════════
+// GOOGLE IDENTITY SERVICES
+// ════════════════════════════════════════════════
+function onGISLoad(){
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,
+    scope:SCOPES,
+    callback:onToken,
+  });
+  // Try silent restore from session
+  const t=sessionStorage.getItem('fcc_tok');
+  const exp=parseInt(sessionStorage.getItem('fcc_exp')||'0');
+  if(t && Date.now()<exp){
+    accessToken=t;
+    tokenExpiry=exp;
+    showLoading('Loading your data…','Connecting to Google Sheets');
+    initApp();
+  }
+}
+
+function connectGoogle(){
+  tokenClient.requestAccessToken({prompt:'consent'});
+}
+
+function onToken(resp){
+  if(resp.error){ showGErr('Google sign-in failed: '+resp.error); return; }
+  accessToken=resp.access_token;
+  tokenExpiry=Date.now()+(resp.expires_in||3600)*1000-60000;
+  sessionStorage.setItem('fcc_tok',accessToken);
+  sessionStorage.setItem('fcc_exp',String(tokenExpiry));
+  showLoading('Setting up your workspace…','Initializing Google Sheets');
+  initApp();
+}
+
+async function refreshTokenIfNeeded(){
+  if(Date.now()<tokenExpiry) return;
+  return new Promise(res=>{
+    tokenClient.requestAccessToken({prompt:''});
+    const orig=tokenClient.callback;
+    tokenClient.callback=(r)=>{ if(!r.error){accessToken=r.access_token;tokenExpiry=Date.now()+(r.expires_in||3600)*1000-60000;sessionStorage.setItem('fcc_tok',accessToken);sessionStorage.setItem('fcc_exp',String(tokenExpiry));} orig(r); res(); };
+  });
+}
+
+// ════════════════════════════════════════════════
+// SHEETS API HELPERS
+// ════════════════════════════════════════════════
+async function sheetsGet(range){
+  await refreshTokenIfNeeded();
+  const r=await fetch(`${API}/values/${encodeURIComponent(range)}`,{headers:{Authorization:`Bearer ${accessToken}`}});
+  if(r.status===401){sessionStorage.clear();location.reload();} 
+  if(!r.ok) throw new Error(`GET ${range} failed: ${r.status}`);
+  return r.json();
+}
+
+async function sheetsUpdate(range,values){
+  await refreshTokenIfNeeded();
+  const r=await fetch(`${API}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,{method:'PUT',headers:{Authorization:`Bearer ${accessToken}`,'Content-Type':'application/json'},body:JSON.stringify({values})});
+  if(!r.ok) throw new Error(`PUT ${range} failed: ${r.status}`);
+  return r.json();
+}
+
+async function sheetsAppend(sheet,values){
+  await refreshTokenIfNeeded();
+  const r=await fetch(`${API}/values/${encodeURIComponent(sheet+'!A1')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{Authorization:`Bearer ${accessToken}`,'Content-Type':'application/json'},body:JSON.stringify({values})});
+  if(!r.ok) throw new Error(`APPEND ${sheet} failed: ${r.status}`);
+  return r.json();
+}
+
+async function sheetsBatchUpdate(requests){
+  await refreshTokenIfNeeded();
+  const r=await fetch(`${API}:batchUpdate`,{method:'POST',headers:{Authorization:`Bearer ${accessToken}`,'Content-Type':'application/json'},body:JSON.stringify({requests})});
+  if(!r.ok) throw new Error('batchUpdate failed: '+r.status);
+  return r.json();
+}
+
+async function getSheetMetadata(){
+  await refreshTokenIfNeeded();
+  const r=await fetch(`${API}?fields=sheets.properties`,{headers:{Authorization:`Bearer ${accessToken}`}});
+  if(!r.ok) throw new Error('Metadata fetch failed');
+  return r.json();
+}
+
+// ════════════════════════════════════════════════
+// SHEET INITIALIZATION
+// ════════════════════════════════════════════════
+async function initApp(){
+  try{
+    await ensureSheets();
+    await loadAllData();
+    hideLoading();
+    showLogin();
+  }catch(e){
+    console.error(e);
+    hideLoading();
+    showGErr('Error: '+e.message+'. Please try again.');
+    document.getElementById('gScreen').style.display='flex';
+  }
+}
+
+async function ensureSheets(){
+  const meta=await getSheetMetadata();
+  const existing=(meta.sheets||[]).map(s=>s.properties.title);
+  const needed=['Tasks','Users','RACI','Notifications'];
+  const missing=needed.filter(n=>!existing.includes(n));
+
+  if(missing.length){
+    setLoadSub('Creating missing sheets…');
+    const reqs=missing.map(t=>({addSheet:{properties:{title:t}}}));
+    await sheetsBatchUpdate(reqs);
+  }
+
+  // Ensure headers
+  await ensureHeaders();
+  // Seed data if empty
+  await seedIfEmpty();
+}
+
+async function ensureHeaders(){
+  setLoadSub('Checking sheet structure…');
+  const headers={
+    Tasks:[['id','org','cat','title','desc','assignee','priority','status','due','createdAt']],
+    Users:[['id','name','role','initials','color','password','isAdmin']],
+    Notifications:[['userId','taskId','taskTitle','org','cat','due','read','ts']],
+  };
+  for(const[sheet,hdr] of Object.entries(headers)){
+    const d=await sheetsGet(`${sheet}!A1:Z1`);
+    const row=(d.values||[[]])[0];
+    if(!row||row[0]!==hdr[0][0]){
+      await sheetsUpdate(`${sheet}!A1`,hdr);
+    }
+  }
+  // RACI: just a JSON blob in A1
+  const rd=await sheetsGet('RACI!A1');
+  if(!(rd.values||[])[0]){
+    await sheetsUpdate('RACI!A1',[[JSON.stringify(DEFAULT_RACI)]]);
+  }
+}
+
+async function seedIfEmpty(){
+  setLoadSub('Checking existing data…');
+  const ud=await sheetsGet('Users!A2:G');
+  if(!(ud.values||[]).length){
+    setLoadSub('Seeding initial user data…');
+    const rows=DEFAULT_USERS.map(u=>[u.id,u.name,u.role,u.initials,u.color,u.password,String(u.isAdmin)]);
+    await sheetsUpdate('Users!A2',rows);
+  }
+  const td=await sheetsGet('Tasks!A2:J');
+  if(!(td.values||[]).length){
+    setLoadSub('Seeding initial tasks…');
+    const now=Date.now();
+    const defaultTasks=getDefaultTasks(now);
+    const rows=defaultTasks.map(t=>[t.id,t.org,t.cat,t.title,t.desc,t.assignee,t.priority,t.status,t.due||'',String(t.createdAt)]);
+    await sheetsUpdate('Tasks!A2',rows);
+  }
+}
+
+// ════════════════════════════════════════════════
+// DATA LOAD
+// ════════════════════════════════════════════════
+async function loadAllData(){
+  setLoadSub('Loading users…');
+  const ud=await sheetsGet('Users!A2:G500');
+  appData.users=(ud.values||[]).filter(r=>r[0]).map(r=>({
+    id:r[0],name:r[1]||'',role:r[2]||'',initials:r[3]||r[0],
+    color:r[4]||'#888',password:r[5]||'',isAdmin:r[6]==='true'
+  }));
+
+  setLoadSub('Loading tasks…');
+  const td=await sheetsGet('Tasks!A2:J2000');
+  appData.tasks=(td.values||[]).filter(r=>r[0]&&r[0]!=='DELETED').map(r=>({
+    id:r[0],org:r[1]||'RADS',cat:r[2]||'Others',title:r[3]||'',
+    desc:r[4]||'',assignee:r[5]||'',priority:r[6]||'Medium',
+    status:r[7]||'Not Started',due:r[8]||'',createdAt:parseInt(r[9]||'0')
+  }));
+
+  setLoadSub('Loading RACI…');
+  const rd=await sheetsGet('RACI!A1');
+  try{ appData.raci=JSON.parse((rd.values||[[]])[0]||'{}'); }
+  catch{ appData.raci=DEFAULT_RACI; }
+
+  setLoadSub('Loading notifications…');
+  const nd=await sheetsGet('Notifications!A2:H5000');
+  appData.notifications={};
+  (nd.values||[]).filter(r=>r[0]).forEach(r=>{
+    const uid=r[0];
+    if(!appData.notifications[uid]) appData.notifications[uid]=[];
+    appData.notifications[uid].push({taskId:r[1],title:r[2],org:r[3],cat:r[4],due:r[5],read:r[6]==='true',ts:parseInt(r[7]||'0')});
+  });
+}
+
+// ════════════════════════════════════════════════
+// DATA SAVE HELPERS
+// ════════════════════════════════════════════════
+async function saveUsers(){
+  setSyncState('syncing');
+  try{
+    const rows=appData.users.map(u=>[u.id,u.name,u.role,u.initials,u.color,u.password,String(u.isAdmin)]);
+    // Clear then rewrite
+    await sheetsUpdate('Users!A2:G500',[...Array(499)].map(()=>Array(7).fill('')));
+    if(rows.length) await sheetsUpdate('Users!A2',rows);
+    setSyncState('ok');
+  }catch(e){ setSyncState('err'); toast('Save failed: '+e.message,'err'); throw e; }
+}
+
+async function saveTasks(){
+  setSyncState('syncing');
+  try{
+    const rows=appData.tasks.map(t=>[t.id,t.org,t.cat,t.title,t.desc||'',t.assignee,t.priority,t.status,t.due||'',String(t.createdAt||0)]);
+    await sheetsUpdate('Tasks!A2:J2000',[...Array(1999)].map(()=>Array(10).fill('')));
+    if(rows.length) await sheetsUpdate('Tasks!A2',rows);
+    setSyncState('ok');
+  }catch(e){ setSyncState('err'); toast('Save failed: '+e.message,'err'); throw e; }
+}
+
+async function saveRaci(){
+  setSyncState('syncing');
+  try{
+    await sheetsUpdate('RACI!A1',[[JSON.stringify(appData.raci)]]);
+    setSyncState('ok');
+  }catch(e){ setSyncState('err'); toast('RACI save failed','err'); throw e; }
+}
+
+async function saveNotifications(){
+  try{
+    const rows=[];
+    Object.entries(appData.notifications).forEach(([uid,notifs])=>{
+      notifs.forEach(n=>rows.push([uid,n.taskId,n.title,n.org,n.cat,n.due||'',String(n.read),String(n.ts)]));
+    });
+    await sheetsUpdate('Notifications!A2:H5000',[...Array(4999)].map(()=>Array(8).fill('')));
+    if(rows.length) await sheetsUpdate('Notifications!A2',rows);
+  }catch(e){ console.warn('Notif save error',e); }
+}
+
+async function syncNow(){
+  setSyncState('syncing');
+  try{
+    await loadAllData();
+    setSyncState('ok');
+    toast('Synced with Google Sheets','ok');
+    renderAll();
+  }catch(e){ setSyncState('err'); toast('Sync failed','err'); }
+}
+
+function setSyncState(s){
+  const c=document.getElementById('syncChip');
+  if(!c) return;
+  c.className='sync-chip '+s;
+  c.innerHTML={syncing:'⟳ Syncing…',ok:'✓ Synced',err:'⚠ Sync Error'}[s]||'';
+}
+
+// ════════════════════════════════════════════════
+// AUTH — APP LOGIN
+// ════════════════════════════════════════════════
+function showLogin(){
+  populateLoginDrop();
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+function populateLoginDrop(){
+  document.getElementById('loginUser').innerHTML=appData.users.map(u=>`<option value="${u.id}">${u.name} — ${u.role}</option>`).join('');
+  document.getElementById('cpUser').innerHTML=appData.users.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+}
+
+function doLogin(){
+  const uid=document.getElementById('loginUser').value;
+  const pwd=document.getElementById('loginPwd').value;
+  const user=appData.users.find(u=>u.id===uid&&u.password===pwd);
+  if(!user){document.getElementById('loginError').style.display='block';return;}
+  currentUser=user;
+
+  // Check for new task notifications
+  const lastKey='fcc_lastlogin_'+uid;
+  const prevLogin=parseInt(sessionStorage.getItem(lastKey)||'0');
+  sessionStorage.setItem(lastKey,String(Date.now()));
+
+  const newTasks=appData.tasks.filter(t=>t.assignee===uid&&(t.createdAt||0)>prevLogin&&t.status!=='Completed');
+  if(!appData.notifications[uid]) appData.notifications[uid]=[];
+  newTasks.forEach(t=>{
+    if(!appData.notifications[uid].find(n=>n.taskId===t.id)){
+      appData.notifications[uid].push({taskId:t.id,title:t.title,org:t.org,cat:t.cat,due:t.due||'',read:false,ts:Date.now()});
+    }
+  });
+  if(newTasks.length) saveNotifications();
+
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  setupUserUI();
+  renderAll();
+  if(newTasks.length) setTimeout(()=>openNotifPanel(),700);
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginPwd').value='';
+  document.getElementById('loginError').style.display='none';
+}
+
+function setupUserUI(){
+  document.getElementById('currentUserChip').innerHTML=`<span class="avsm" style="background:${currentUser.color};width:22px;height:22px;font-size:9px">${currentUser.initials}</span> ${currentUser.name.split(' ')[0]}`;
+  document.getElementById('adminBtnWrap').style.display=currentUser.isAdmin?'':'none';
+  document.getElementById('datechip').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  updateNotifBadge();
+  buildTeamSidebar();
+  populateAssigneeDrop();
+}
+
+// ════════════════════════════════════════════════
+// CHANGE PASSWORD
+// ════════════════════════════════════════════════
+function openChangePwd(){
+  document.getElementById('cpOld').value='';
+  document.getElementById('cpNew').value='';
+  document.getElementById('cpError').style.display='none';
+  openModal('changePwdModal');
+}
+
+async function doChangePwd(){
+  const uid=document.getElementById('cpUser').value;
+  const oldP=document.getElementById('cpOld').value;
+  const newP=document.getElementById('cpNew').value;
+  const err=document.getElementById('cpError');
+  const idx=appData.users.findIndex(u=>u.id===uid&&u.password===oldP);
+  if(idx<0){err.textContent='Current password is incorrect.';err.style.display='block';return;}
+  if(newP.length<6){err.textContent='New password must be at least 6 characters.';err.style.display='block';return;}
+  appData.users[idx].password=newP;
+  await saveUsers();
+  closeModal('changePwdModal');
+  toast('Password updated successfully!','ok');
+}
+
+// ════════════════════════════════════════════════
+// ORG / FILTER
+// ════════════════════════════════════════════════
+function selectOrg(org){
+  activeOrg=org;
+  document.querySelectorAll('.org-tab').forEach((t,i)=>{
+    const k=['RADS','AHKF','AeH','RADS_SG','RADS_US','ALL'][i];
+    t.classList.toggle('active',k===org);
+    if(k===org){
+      const o=ORGS[org]||{color:'#9b72cf'};
+      t.style.borderBottomColor=o.color; t.style.color='#1c1a17';
+      document.documentElement.style.setProperty('--accent',o.color);
+      const r=parseInt(o.color.slice(1,3),16),g=parseInt(o.color.slice(3,5),16),b=parseInt(o.color.slice(5,7),16);
+      document.documentElement.style.setProperty('--accent-dim',`rgba(${r},${g},${b},0.09)`);
+    }else{t.style.borderBottomColor='transparent';t.style.color='';}
+  });
+  if(activeView==='matrix'&&org!=='ALL') document.getElementById('matrixOrgSel').value=org;
+  renderAll();
+}
+
+function filterCat(cat,btn){
+  activeCat=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function filterMember(m,el){
+  activeMember=m;
+  document.querySelectorAll('.tm').forEach(t=>t.classList.remove('af'));
+  el.classList.add('af');
+  renderTable();
+}
+
+function switchView(v){
+  activeView=v;
+  document.querySelectorAll('.view-btn').forEach((b,i)=>b.classList.toggle('active',['tasks','matrix'][i]===v));
+  document.getElementById('tasksView').style.display=v==='tasks'?'':'none';
+  document.getElementById('matrixView').style.display=v==='matrix'?'block':'none';
+  if(v==='matrix'){if(activeOrg!=='ALL')document.getElementById('matrixOrgSel').value=activeOrg;renderMatrix();}
+}
+
+// ════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════
+function renderAll(){
+  updateOrgIndicator(); updateCounts(); renderStats(); renderTable(); buildTeamSidebar();
+}
+
+function buildTeamSidebar(){
+  document.getElementById('teamSidebar').innerHTML=appData.users.map(u=>
+    `<div class="tm${activeMember===u.id?' af':''}" onclick="filterMember('${u.id}',this)">
+      <div class="av" style="background:${u.color}">${u.initials}</div>
+      <div><div class="mn">${u.name.split(' ')[0]}</div><div class="mr">${u.role}</div></div>
+    </div>`).join('');
+}
+
+function populateAssigneeDrop(){
+  document.getElementById('fAssignee').innerHTML=appData.users.map(u=>`<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
+}
+
+function renderStats(){
+  const tasks=getFiltered();
+  const tot=tasks.length,done=tasks.filter(t=>t.status==='Completed').length;
+  const inp=tasks.filter(t=>t.status==='In Progress').length;
+  const od=tasks.filter(t=>t.status==='Overdue').length;
+  const hi=tasks.filter(t=>t.priority==='High').length;
+  const pct=tot?Math.round(done/tot*100):0;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="sv">${tot}</div><div class="sl">Total Tasks</div><div class="ss" style="color:var(--text3)">${activeOrg==='ALL'?'All Orgs':(ORGS[activeOrg]?.name||'')}</div></div>
+    <div class="stat-card" style="border-top-color:${od>0?'var(--red)':'var(--accent)'}"><div class="sv" style="color:${od>0?'var(--red)':'var(--text)'}">${od}</div><div class="sl">Overdue</div><div class="ss" style="color:${od>0?'var(--red)':'var(--green)'}">${od>0?'⚠ Needs attention':'✓ On track'}</div></div>
+    <div class="stat-card" style="border-top-color:var(--amber)"><div class="sv" style="color:var(--amber)">${inp}</div><div class="sl">In Progress</div><div class="ss" style="color:var(--text3)">Active tasks</div></div>
+    <div class="stat-card" style="border-top-color:var(--green)"><div class="sv" style="color:var(--green)">${done}</div><div class="sl">Completed</div><div class="ss" style="color:var(--green)">${pct}% done</div></div>
+    <div class="stat-card" style="border-top-color:var(--red)"><div class="sv" style="color:var(--red)">${hi}</div><div class="sl">High Priority</div><div class="ss" style="color:var(--text3)">Require focus</div></div>`;
+}
+
+function getFiltered(){
+  const q=(document.getElementById('searchBox')?.value||'').toLowerCase();
+  const sf=document.getElementById('statusFilter')?.value||'';
+  const pf=document.getElementById('priorityFilter')?.value||'';
+  return appData.tasks.filter(t=>{
+    if(activeOrg!=='ALL'&&t.org!==activeOrg) return false;
+    if(activeCat!=='all'&&t.cat!==activeCat) return false;
+    if(activeMember!=='all'&&t.assignee!==activeMember) return false;
+    if(q&&!t.title.toLowerCase().includes(q)&&!(t.desc||'').toLowerCase().includes(q)) return false;
+    if(sf&&t.status!==sf) return false;
+    if(pf&&t.priority!==pf) return false;
+    return true;
+  });
+}
+
+function renderTable(){
+  const tasks=getFiltered();
+  const tbody=document.getElementById('taskBody');
+  updateCounts(); renderStats();
+  if(!tasks.length){tbody.innerHTML=`<tr><td colspan="8"><div class="es"><div class="ei">📭</div><p>No tasks match the current filters.</p></div></td></tr>`;return;}
+  const grp={};CATS.forEach(c=>grp[c]=[]);
+  tasks.forEach(t=>{if(grp[t.cat])grp[t.cat].push(t);});
+  let html='';
+  CATS.forEach(cat=>{
+    const ct=grp[cat];if(!ct.length)return;
+    html+=`<tr class="cgr"><td colspan="8"><div class="cgl">${CICO[cat]} ${cat} <span style="font-size:11px;color:var(--text3);font-weight:400;">(${ct.length})</span></div></td></tr>`;
+    ct.forEach(t=>{
+      const u=appData.users.find(x=>x.id===t.assignee)||{name:t.assignee,initials:'?',color:'#888'};
+      const o=ORGS[t.org]||{};
+      const od=t.due&&new Date(t.due)<new Date()&&t.status!=='Completed';
+      const isNew=currentUser&&(appData.notifications[currentUser.id]||[]).some(n=>n.taskId===t.id&&!n.read);
+      html+=`<tr><td class="tc">${t.title}${isNew?'<span class="badge-new">NEW</span>':''}<small>${t.desc||''}</small></td>
+        <td><span style="font-size:12px;color:var(--text3)">${CICO[t.cat]} ${t.cat}</span></td>
+        <td><span class="ac"><span class="avsm" style="background:${u.color}">${u.initials}</span>${u.name.split(' ')[0]}</span></td>
+        <td><span class="badge p-${t.priority.toLowerCase().slice(0,2)}">${t.priority}</span></td>
+        <td><span class="badge ${SCLS[t.status]||'s-ns'}"><span class="bdot"></span>${t.status}</span></td>
+        <td class="dd ${od?'dd-od':''}">${fmtDate(t.due)}</td>
+        <td><span class="op" style="background:${o.bg||'rgba(0,0,0,0.05)'};color:${o.color||'#666'};border:1px solid ${o.color||'#ccc'}30">${o.short||t.org}</span></td>
+        <td><button class="ab" onclick="openTaskModal('${t.id}')" title="Edit">✏</button><button class="ab del" onclick="deleteTask('${t.id}')" title="Delete">✕</button></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML=html;
+}
+
+function updateCounts(){
+  const org=appData.tasks.filter(t=>activeOrg==='ALL'||t.org===activeOrg);
+  document.getElementById('cnt-all').textContent=org.length;
+  const cm={'Audit':'cnt-Audit','Tax & Compliance':'cnt-Tax','Bank & Treasury':'cnt-Bank','Financial Reporting':'cnt-FR','Donor Reporting':'cnt-DR','Others':'cnt-Others'};
+  Object.entries(cm).forEach(([c,id])=>{const el=document.getElementById(id);if(el)el.textContent=org.filter(t=>t.cat===c).length;});
+}
+
+function updateOrgIndicator(){
+  const el=document.getElementById('orgInd'),ttl=document.getElementById('secTitle');
+  if(activeOrg==='ALL'){
+    ttl.textContent='All Organizations — Task Overview';
+    el.innerHTML=Object.entries(ORGS).map(([,o])=>`<span class="op" style="background:${o.bg};color:${o.color};border:1px solid ${o.color}40">${o.name}</span>`).join('');
+  }else{
+    const o=ORGS[activeOrg];
+    ttl.textContent=`${o.name} — Finance Tasks`;
+    el.innerHTML=`<span class="op" style="background:${o.bg};color:${o.color};border:1px solid ${o.color}50;font-size:12px;padding:3px 11px">${o.name}</span>`;
+  }
+}
+
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+// ════════════════════════════════════════════════
+// TASK CRUD
+// ════════════════════════════════════════════════
+function openTaskModal(id=null){
+  populateAssigneeDrop();
+  editingTaskId=id;
+  document.getElementById('taskModalTitle').textContent=id?'Edit Task':'New Task';
+  if(id){
+    const t=appData.tasks.find(x=>x.id===id);
+    if(t){
+      document.getElementById('fTitle').value=t.title;
+      document.getElementById('fDesc').value=t.desc||'';
+      document.getElementById('fOrg').value=t.org;
+      document.getElementById('fCat').value=t.cat;
+      document.getElementById('fAssignee').value=t.assignee;
+      document.getElementById('fPriority').value=t.priority;
+      document.getElementById('fStatus').value=t.status;
+      document.getElementById('fDue').value=t.due||'';
+    }
+  }else{
+    document.getElementById('fTitle').value='';
+    document.getElementById('fDesc').value='';
+    document.getElementById('fOrg').value=activeOrg==='ALL'?'RADS':activeOrg;
+    document.getElementById('fCat').value='Audit';
+    document.getElementById('fPriority').value='Medium';
+    document.getElementById('fStatus').value='Not Started';
+    document.getElementById('fDue').value='';
+    if(appData.users.length) document.getElementById('fAssignee').value=appData.users[1]?.id||appData.users[0].id;
+  }
+  openModal('taskModal');
+}
+
+async function saveTask(){
+  const title=document.getElementById('fTitle').value.trim();
+  if(!title){alert('Task title is required.');return;}
+  const btn=document.getElementById('saveTaskBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+
+  const assignee=document.getElementById('fAssignee').value;
+  const taskObj={
+    id:editingTaskId||'T'+Date.now(),
+    title,desc:document.getElementById('fDesc').value.trim(),
+    org:document.getElementById('fOrg').value,cat:document.getElementById('fCat').value,
+    assignee,priority:document.getElementById('fPriority').value,
+    status:document.getElementById('fStatus').value,due:document.getElementById('fDue').value,
+    createdAt:editingTaskId?(appData.tasks.find(t=>t.id===editingTaskId)?.createdAt||Date.now()):Date.now()
+  };
+
+  if(editingTaskId){
+    const prev=appData.tasks.find(t=>t.id===editingTaskId);
+    const idx=appData.tasks.findIndex(t=>t.id===editingTaskId);
+    appData.tasks[idx]=taskObj;
+    // Notify if reassigned
+    if(prev&&prev.assignee!==assignee) addNotification(assignee,taskObj);
+  }else{
+    appData.tasks.push(taskObj);
+    addNotification(assignee,taskObj);
+  }
+
+  try{
+    await saveTasks();
+    if(Object.keys(appData.notifications).some(k=>appData.notifications[k].length))
+      await saveNotifications();
+    closeModal('taskModal');
+    renderAll();
+    toast(editingTaskId?'Task updated':'Task added & saved','ok');
+  }catch(e){toast('Failed to save: '+e.message,'err');}
+  btn.disabled=false;btn.textContent='Save Task';
+}
+
+function addNotification(uid,task){
+  if(!currentUser||uid===currentUser.id) return;
+  if(!appData.notifications[uid]) appData.notifications[uid]=[];
+  if(!appData.notifications[uid].find(n=>n.taskId===task.id)){
+    appData.notifications[uid].push({taskId:task.id,title:task.title,org:task.org,cat:task.cat,due:task.due||'',read:false,ts:Date.now()});
+  }
+}
+
+async function deleteTask(id){
+  if(!confirm('Delete this task?')) return;
+  appData.tasks=appData.tasks.filter(t=>t.id!==id);
+  await saveTasks();
+  renderAll();
+  toast('Task deleted','info');
+}
+
+// ════════════════════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════════════════════
+function updateNotifBadge(){
+  if(!currentUser) return;
+  const mine=(appData.notifications[currentUser.id]||[]).filter(n=>!n.read).length;
+  const b=document.getElementById('notifBadge');
+  b.textContent=mine; b.style.display=mine>0?'flex':'none';
+}
+
+function openNotifPanel(){
+  if(!currentUser) return;
+  const mine=(appData.notifications[currentUser.id]||[]).sort((a,b)=>b.ts-a.ts);
+  const el=document.getElementById('notifList');
+  if(!mine.length){el.innerHTML='<div class="ne">✅ No notifications.</div>';}
+  else{
+    el.innerHTML=mine.map(n=>{
+      const o=ORGS[n.org]||{name:n.org};
+      return `<div class="ni${n.read?'':' unread'}">
+        <div class="nico">${n.read?'📋':'🆕'}</div>
+        <div><div class="nitl">${n.title}${!n.read?'<span class="badge-new">NEW</span>':''}</div>
+        <div class="nidc">${o.name} · ${n.cat}${n.due?' · Due: '+fmtDate(n.due):''}</div>
+        <div class="nitm">${timeAgo(n.ts)}</div></div>
+      </div>`;
+    }).join('');
+  }
+  openModal('notifModal');
+}
+
+async function markAllRead(){
+  if(!currentUser) return;
+  (appData.notifications[currentUser.id]||[]).forEach(n=>n.read=true);
+  await saveNotifications();
+  updateNotifBadge();
+  closeModal('notifModal');
+  renderTable();
+  toast('All notifications marked as read','ok');
+}
+
+function timeAgo(ts){
+  const d=Date.now()-ts;
+  if(d<60000)return'Just now';
+  if(d<3600000)return Math.floor(d/60000)+'m ago';
+  if(d<86400000)return Math.floor(d/3600000)+'h ago';
+  return Math.floor(d/86400000)+'d ago';
+}
+
+// ════════════════════════════════════════════════
+// RACI MATRIX
+// ════════════════════════════════════════════════
+function renderMatrix(){
+  const org=document.getElementById('matrixOrgSel').value;
+  const data=appData.raci[org]||{};
+  const users=appData.users;
+  let html=`<thead><tr><th style="min-width:190px">Responsibility Area</th>
+    ${users.map(u=>`<th style="min-width:100px;text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:2px">
+        <span class="avsm" style="background:${u.color};width:19px;height:19px;font-size:8px">${u.initials}</span>
+        <span style="color:var(--text)">${u.name.split(' ')[0]}</span>
+      </div><div style="font-size:9.5px;color:var(--text3)">${u.role}</div>
+    </th>`).join('')}
+  </tr></thead><tbody>`;
+  CATS.forEach(cat=>{
+    const cd=data[cat]||{};
+    html+=`<tr><td colspan="${users.length+1}" class="mcat">${CICO[cat]} ${cat}</td></tr>`;
+    const rows=Object.entries(cd);
+    if(!rows.length){
+      html+=`<tr><td class="mrl" style="color:var(--text3);font-style:italic">No responsibilities defined</td>${users.map(()=>`<td class="rtd"><span class="raci rE" onclick="cycleRaci(this,'${org}','${cat}','—','X')">—</span></td>`).join('')}</tr>`;
+    }else{
+      rows.forEach(([task,raci])=>{
+        html+=`<tr><td><div class="mrl">${task}</div></td>
+          ${users.map(u=>{
+            const r=raci[u.id]||raci[u.initials]||'';
+            return `<td class="rtd"><span class="raci r${r||'E'}" onclick="cycleRaci(this,'${org}','${cat}','${task.replace(/'/g,"\\'")}','${u.id}')" title="${raciTitle(r)||'Click to assign'}">${r||'—'}</span></td>`;
+          }).join('')}
+        </tr>`;
+      });
+    }
+  });
+  html+='</tbody>';
+  document.getElementById('matrixTable').innerHTML=html;
+}
+
+async function cycleRaci(el,org,cat,task,userId){
+  if(!appData.raci[org]) appData.raci[org]={};
+  if(!appData.raci[org][cat]) appData.raci[org][cat]={};
+  if(!appData.raci[org][cat][task]) appData.raci[org][cat][task]={};
+  const cur=appData.raci[org][cat][task][userId]||'';
+  const next=RCYC[(RCYC.indexOf(cur)+1)%RCYC.length];
+  appData.raci[org][cat][task][userId]=next;
+  el.className=`raci r${next||'E'}`;el.textContent=next||'—';el.title=raciTitle(next)||'Click to assign';
+  await saveRaci();
+}
+
+function raciTitle(r){return{R:'Responsible',A:'Accountable',C:'Consulted',I:'Informed'}[r]||'';}
+
+// ════════════════════════════════════════════════
+// ADMIN
+// ════════════════════════════════════════════════
+function openAdmin(){
+  adminTab('users',document.querySelector('.atab'));
+  refreshUserList();
+  document.getElementById('resetUser').innerHTML=appData.users.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  openModal('adminModal');
+}
+
+function adminTab(tab,btn){
+  document.querySelectorAll('.atab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('adminTabUsers').style.display=tab==='users'?'':'none';
+  document.getElementById('adminTabAddUser').style.display=tab==='addUser'?'':'none';
+  document.getElementById('adminTabReset').style.display=tab==='reset'?'':'none';
+}
+
+function refreshUserList(){
+  document.getElementById('userListEl').innerHTML=appData.users.map(u=>`
+    <div class="ur">
+      <div class="av" style="background:${u.color};width:34px;height:34px;font-size:12px">${u.initials}</div>
+      <div class="uri"><div class="urn">${u.name}${u.isAdmin?' <span class="admin-badge">ADMIN</span>':''}</div><div class="urm">${u.role} · ID: ${u.id}</div></div>
+      <div class="ura">
+        <button class="ib" onclick="openEditUser('${u.id}')">✏ Edit</button>
+        ${u.id!=='US'?`<button class="ib red" onclick="removeUser('${u.id}')">✕</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function addNewUser(){
+  const name=document.getElementById('nuName').value.trim();
+  const init=document.getElementById('nuInit').value.trim().toUpperCase();
+  const role=document.getElementById('nuRole').value.trim();
+  const pwd=document.getElementById('nuPwd').value.trim();
+  const color=document.getElementById('nuColor').value;
+  const isAdmin=document.getElementById('nuAdmin').value==='true';
+  if(!name||!init||!pwd){alert('Name, initials and password are required.');return;}
+  const btn=document.getElementById('addUserBtn');
+  btn.disabled=true;btn.textContent='Adding…';
+  const newUser={id:init+Date.now()%10000,name,role:role||'Team Member',initials:init,color,password:pwd,isAdmin};
+  appData.users.push(newUser);
+  try{
+    await saveUsers();
+    ['nuName','nuInit','nuRole','nuPwd'].forEach(f=>document.getElementById(f).value='');
+    refreshUserList();
+    buildTeamSidebar();
+    populateAssigneeDrop();
+    populateLoginDrop();
+    toast(`✅ ${name} added successfully!`,'ok');
+    adminTab('users',document.querySelectorAll('.atab')[0]);
+  }catch(e){appData.users.pop();toast('Failed to add user','err');}
+  btn.disabled=false;btn.textContent='Add Member';
+}
+
+async function removeUser(id){
+  if(!confirm('Remove this team member? Their tasks will remain.'))return;
+  appData.users=appData.users.filter(u=>u.id!==id);
+  await saveUsers();
+  refreshUserList(); buildTeamSidebar(); populateAssigneeDrop(); populateLoginDrop();
+  toast('Team member removed','info');
+}
+
+function openEditUser(id){
+  const u=appData.users.find(x=>x.id===id);if(!u)return;
+  document.getElementById('euId').value=u.id;
+  document.getElementById('euName').value=u.name;
+  document.getElementById('euRole').value=u.role;
+  document.getElementById('euInit').value=u.initials;
+  document.getElementById('euColor').value=u.color;
+  document.getElementById('euAdmin').value=String(u.isAdmin);
+  closeModal('adminModal');
+  openModal('editUserModal');
+}
+
+async function saveEditUser(){
+  const id=document.getElementById('euId').value;
+  const idx=appData.users.findIndex(u=>u.id===id);
+  if(idx<0)return;
+  appData.users[idx]={...appData.users[idx],
+    name:document.getElementById('euName').value.trim()||appData.users[idx].name,
+    role:document.getElementById('euRole').value.trim()||appData.users[idx].role,
+    initials:document.getElementById('euInit').value.trim().toUpperCase()||appData.users[idx].initials,
+    color:document.getElementById('euColor').value,
+    isAdmin:document.getElementById('euAdmin').value==='true'
+  };
+  await saveUsers();
+  if(currentUser&&currentUser.id===id){currentUser=appData.users[idx];setupUserUI();}
+  closeModal('editUserModal');
+  renderAll();
+  toast('User updated','ok');
+}
+
+async function doResetPassword(){
+  const uid=document.getElementById('resetUser').value;
+  const pwd=document.getElementById('resetPwd').value.trim();
+  if(!pwd||pwd.length<6){alert('Password must be at least 6 characters.');return;}
+  const btn=document.getElementById('resetPwdBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  const idx=appData.users.findIndex(u=>u.id===uid);
+  if(idx>=0){appData.users[idx].password=pwd;}
+  try{
+    await saveUsers();
+    document.getElementById('resetPwd').value='';
+    toast('✅ Password reset successfully!','ok');
+  }catch(e){toast('Failed to reset password','err');}
+  btn.disabled=false;btn.textContent='Reset Password';
+}
+
+// ════════════════════════════════════════════════
+// MODAL HELPERS
+// ════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+function toast(msg,type='info'){
+  const c=document.getElementById('toast');
+  const d=document.createElement('div');
+  d.className=`toast-msg ${type}`;d.textContent=msg;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),3200);
+}
+
+// ════════════════════════════════════════════════
+// LOADING / SCREEN HELPERS
+// ════════════════════════════════════════════════
+function showLoading(msg,sub=''){
+  document.getElementById('gScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='none';
+  const ls=document.getElementById('loadingScreen');
+  ls.style.display='flex';
+  document.getElementById('loadMsg').textContent=msg;
+  document.getElementById('loadSub').textContent=sub;
+}
+function setLoadSub(s){const el=document.getElementById('loadSub');if(el)el.textContent=s;}
+function hideLoading(){document.getElementById('loadingScreen').style.display='none';}
+function showGErr(msg){const el=document.getElementById('gsErr');el.textContent=msg;el.style.display='block';document.getElementById('gScreen').style.display='flex';}
+
+// ════════════════════════════════════════════════
+// DEFAULT TASKS SEED DATA
+// ════════════════════════════════════════════════
+function getDefaultTasks(now){
+  return[
+    {id:'T1',org:'RADS',cat:'Audit',title:'Annual Statutory Audit FY2024-25',desc:'Coordinate with external auditors for year-end audit',assignee:'US',priority:'High',status:'In Progress',due:'2025-06-30',createdAt:now-9000000},
+    {id:'T2',org:'RADS',cat:'Audit',title:'Gates Foundation Project Audit',desc:'Donor-required project-specific audit (PHC/DSDP)',assignee:'US',priority:'High',status:'Not Started',due:'2025-07-31',createdAt:now-8000000},
+    {id:'T3',org:'RADS',cat:'Audit',title:'Internal Controls Review',desc:'Quarterly internal controls assessment',assignee:'RH',priority:'Medium',status:'Not Started',due:'2025-06-15',createdAt:now-7000000},
+    {id:'T4',org:'RADS',cat:'Tax & Compliance',title:'Monthly WHT Filing (Sec 165)',desc:'FBR withholding tax monthly e-filing',assignee:'RH',priority:'High',status:'In Progress',due:'2025-04-15',createdAt:now-6000000},
+    {id:'T5',org:'RADS',cat:'Tax & Compliance',title:'Annual Income Tax Return',desc:'Corporate income tax return filing',assignee:'US',priority:'High',status:'Not Started',due:'2025-09-30',createdAt:now-5000000},
+    {id:'T6',org:'RADS',cat:'Tax & Compliance',title:'SECP Annual Return Filing',desc:'Companies Act compliance annual return',assignee:'RH',priority:'High',status:'Not Started',due:'2025-05-31',createdAt:now-4500000},
+    {id:'T7',org:'RADS',cat:'Tax & Compliance',title:'NPO Registration Renewal',desc:'FBR NPO status renewal and compliance',assignee:'US',priority:'Medium',status:'Under Review',due:'2025-06-30',createdAt:now-4000000},
+    {id:'T8',org:'RADS',cat:'Bank & Treasury',title:'Monthly Bank Reconciliation',desc:'All accounts — HBL, MCB, Meezan',assignee:'MH',priority:'High',status:'In Progress',due:'2025-04-10',createdAt:now-3500000},
+    {id:'T9',org:'RADS',cat:'Bank & Treasury',title:'Investment Policy Review',desc:'Review short-term investment strategy',assignee:'US',priority:'Medium',status:'Not Started',due:'2025-05-15',createdAt:now-3000000},
+    {id:'T10',org:'RADS',cat:'Bank & Treasury',title:'Signatory Update — HBL',desc:'Add authorized signatory per Board resolution',assignee:'RH',priority:'Low',status:'Completed',due:'2025-03-31',createdAt:now-2500000},
+    {id:'T11',org:'RADS',cat:'Financial Reporting',title:'Monthly MIS Report — March 2025',desc:'Management information report for all projects',assignee:'US',priority:'High',status:'In Progress',due:'2025-04-10',createdAt:now-2000000},
+    {id:'T12',org:'RADS',cat:'Financial Reporting',title:'Q3 Financial Statements',desc:'Quarterly financials (Balance Sheet, P&L)',assignee:'US',priority:'High',status:'Not Started',due:'2025-04-20',createdAt:now-1800000},
+    {id:'T13',org:'RADS',cat:'Financial Reporting',title:'Fixed Assets Register Update',desc:'Annual depreciation and asset addition entries',assignee:'MH',priority:'Medium',status:'Not Started',due:'2025-05-31',createdAt:now-1600000},
+    {id:'T14',org:'RADS',cat:'Donor Reporting',title:'Gates Foundation — March BVA',desc:'Budget vs Actual variance analysis submission',assignee:'US',priority:'High',status:'In Progress',due:'2025-04-15',createdAt:now-1400000},
+    {id:'T15',org:'RADS',cat:'Donor Reporting',title:'UN Women — Q1 Financial Report',desc:'Quarterly financial report to UN Women',assignee:'RH',priority:'High',status:'Not Started',due:'2025-04-30',createdAt:now-1200000},
+    {id:'T16',org:'RADS',cat:'Donor Reporting',title:'USAID Expenditure Report',desc:'Monthly USAID financial reporting per grant terms',assignee:'US',priority:'High',status:'Overdue',due:'2025-03-31',createdAt:now-1000000},
+    {id:'T17',org:'RADS',cat:'Others',title:'Salary Increment Letters 2025',desc:'Prepare and process annual increment notifications',assignee:'US',priority:'Medium',status:'Completed',due:'2025-03-15',createdAt:now-900000},
+    {id:'T18',org:'RADS',cat:'Others',title:'Finance Policy Manual Update',desc:'Revise finance and procurement policies',assignee:'US',priority:'Low',status:'Not Started',due:'2025-06-30',createdAt:now-800000},
+    {id:'T19',org:'AHKF',cat:'Audit',title:'Statutory Audit FY2024',desc:'Annual audit coordination with auditors',assignee:'US',priority:'High',status:'In Progress',due:'2025-05-31',createdAt:now-700000},
+    {id:'T20',org:'AHKF',cat:'Audit',title:'UN Women Project Audit (D4WEE)',desc:'Donor-required audit for UN Women project',assignee:'RH',priority:'High',status:'Not Started',due:'2025-07-31',createdAt:now-650000},
+    {id:'T21',org:'AHKF',cat:'Tax & Compliance',title:'Annual Tax Filing AHKF',desc:'Income tax return filing for AHKF',assignee:'US',priority:'High',status:'Not Started',due:'2025-09-30',createdAt:now-600000},
+    {id:'T22',org:'AHKF',cat:'Tax & Compliance',title:'WHT Monthly Filing',desc:'Monthly withholding tax return FBR',assignee:'RH',priority:'High',status:'In Progress',due:'2025-04-15',createdAt:now-560000},
+    {id:'T23',org:'AHKF',cat:'Bank & Treasury',title:'Bank Reconciliation — March',desc:'Monthly bank recon all AHKF accounts',assignee:'MH',priority:'High',status:'Not Started',due:'2025-04-10',createdAt:now-520000},
+    {id:'T24',org:'AHKF',cat:'Financial Reporting',title:'Monthly Accounts Closing',desc:'Month-end closing entries and trial balance',assignee:'RH',priority:'High',status:'In Progress',due:'2025-04-10',createdAt:now-480000},
+    {id:'T25',org:'AHKF',cat:'Donor Reporting',title:'UN Women D4WEE Monthly Report',desc:'Monthly financial report — UN Women',assignee:'US',priority:'High',status:'In Progress',due:'2025-04-15',createdAt:now-440000},
+    {id:'T26',org:'AHKF',cat:'Donor Reporting',title:'BAT-EAP Quarterly Financial Report',desc:'British Asian Trust EAP project reporting',assignee:'RH',priority:'High',status:'Not Started',due:'2025-04-30',createdAt:now-400000},
+    {id:'T27',org:'AHKF',cat:'Others',title:'TiE Agreement Contract Review',desc:'Review financial provisions in TiE Islamabad MOU',assignee:'US',priority:'Medium',status:'Completed',due:'2025-03-20',createdAt:now-360000},
+    {id:'T28',org:'AeH',cat:'Audit',title:'Annual Audit FY2024',desc:'Pvt. Ltd. annual statutory audit',assignee:'US',priority:'High',status:'Not Started',due:'2025-06-30',createdAt:now-320000},
+    {id:'T29',org:'AeH',cat:'Tax & Compliance',title:'SECP Annual Return',desc:'Companies Act annual compliance filing',assignee:'RH',priority:'High',status:'Not Started',due:'2025-05-31',createdAt:now-280000},
+    {id:'T30',org:'AeH',cat:'Tax & Compliance',title:'Corporate Tax Return',desc:'Annual income tax return for AeH',assignee:'US',priority:'High',status:'Not Started',due:'2025-09-30',createdAt:now-240000},
+    {id:'T31',org:'AeH',cat:'Bank & Treasury',title:'Bank Reconciliation — March',desc:'Monthly reconciliation of company accounts',assignee:'MH',priority:'Medium',status:'Not Started',due:'2025-04-10',createdAt:now-200000},
+    {id:'T32',org:'AeH',cat:'Financial Reporting',title:'Quarterly P&L Statement',desc:'Q1 2025 Profit & Loss for management',assignee:'US',priority:'Medium',status:'Not Started',due:'2025-04-30',createdAt:now-160000},
+    {id:'T33',org:'AeH',cat:'Others',title:'Company Secretarial Maintenance',desc:'Board minutes, share register updates',assignee:'RH',priority:'Low',status:'Not Started',due:'2025-05-31',createdAt:now-120000},
+    {id:'T34',org:'RADS_SG',cat:'Audit',title:'ACRA Compliance Audit',desc:'Annual audit per Singapore Companies Act',assignee:'US',priority:'High',status:'Not Started',due:'2025-09-30',createdAt:now-100000},
+    {id:'T35',org:'RADS_SG',cat:'Tax & Compliance',title:'Corporate Tax Filing (IRAS)',desc:'Singapore income tax return (IRAS)',assignee:'US',priority:'High',status:'Not Started',due:'2025-11-30',createdAt:now-80000},
+    {id:'T36',org:'RADS_SG',cat:'Tax & Compliance',title:'GST Filing — Q1 2025',desc:'Singapore GST quarterly return',assignee:'RH',priority:'High',status:'Not Started',due:'2025-04-30',createdAt:now-60000},
+    {id:'T37',org:'RADS_SG',cat:'Bank & Treasury',title:'SGD Account Reconciliation',desc:'Monthly recon of Singapore bank accounts',assignee:'MH',priority:'Medium',status:'Not Started',due:'2025-04-10',createdAt:now-50000},
+    {id:'T38',org:'RADS_SG',cat:'Financial Reporting',title:'Monthly Reporting — March 2025',desc:'Management accounts in SGD for HQ consolidation',assignee:'US',priority:'High',status:'Not Started',due:'2025-04-15',createdAt:now-40000},
+    {id:'T39',org:'RADS_SG',cat:'Others',title:'ACRA Annual Return',desc:'Company annual return filing with ACRA',assignee:'RH',priority:'High',status:'Not Started',due:'2025-08-31',createdAt:now-30000},
+    {id:'T40',org:'RADS_US',cat:'Audit',title:'Annual Audit — LLC FY2024',desc:'US LLC annual financial audit',assignee:'US',priority:'High',status:'Not Started',due:'2025-09-30',createdAt:now-20000},
+    {id:'T41',org:'RADS_US',cat:'Tax & Compliance',title:'Federal Tax Return (Form 1065)',desc:'IRS partnership tax return filing',assignee:'US',priority:'High',status:'Not Started',due:'2025-09-15',createdAt:now-15000},
+    {id:'T42',org:'RADS_US',cat:'Tax & Compliance',title:'State Tax Compliance',desc:'State-level tax registrations and filings',assignee:'RH',priority:'Medium',status:'Not Started',due:'2025-10-31',createdAt:now-10000},
+    {id:'T43',org:'RADS_US',cat:'Bank & Treasury',title:'USD Account Reconciliation',desc:'Monthly US bank account reconciliation',assignee:'MH',priority:'Medium',status:'Not Started',due:'2025-04-10',createdAt:now-8000},
+    {id:'T44',org:'RADS_US',cat:'Financial Reporting',title:'USD Monthly Financial Report',desc:'USD financials for HQ consolidation',assignee:'US',priority:'High',status:'Not Started',due:'2025-04-15',createdAt:now-5000},
+    {id:'T45',org:'RADS_US',cat:'Donor Reporting',title:'USAID Reporting (US Entity)',desc:'Grant financial reporting from US entity',assignee:'US',priority:'High',status:'Not Started',due:'2025-04-30',createdAt:now-2000},
+  ];
+}
+</script>
+</body>
+</html>
